@@ -1,0 +1,23 @@
+library("readxl")
+library("dplyr")
+library("data.table") 
+my_data <- read_excel("Facturas Dash 03JUL20.xlsx")
+
+provedores<- read_excel("Facturas Proveedores 2019.xlsx")
+
+provedores2<- read_excel("Facturas Proveedores ENE-JUN 2020.xlsx")
+
+provedores=rbind(provedores,provedores2)
+dash=as.data.frame.matrix(my_data) 
+provedores=as.data.frame.matrix(provedores) 
+p=provedores$`Referencia 2`
+algo=provedores[which(provedores$`Referencia 2` == '0-21175'), ]
+algo2=provedores[which(provedores$`Referencia 2` == '0-21451'), ]
+nona=provedores[!is.na(provedores$Crédito),]
+names(dash)[names(dash) == "No FACTURA"] <- "Referencia 2"
+datos=cbind(nona$`Referencia 2`,nona$`Cuenta de mayor/Nombre SN`,nona$Crédito)
+datos=setDT(datos)[ , .SD[which.max(Crédito)], by ="Referencia 2"] 
+datosdash=cbind(dash$`Referencia 2`,dash$PROVEEDOR,dash$`TOTAL A PAGAR FACTURAS`)
+names(datosdash)[names(datosdash) == "No FACTURA"] <- "Referencia 2"
+tabla=merge(x =datos, y =datosdash, by ="Referencia 2", all = TRUE)
+tabla <- apply(tabla,2,toupper)
